@@ -1402,10 +1402,23 @@ async function startLARS(
         const frontendDir = path.resolve(PROJECT_ROOT, info.frontend?.sourceDirectory || 'frontend')
         const indexHtmlBackup = path.join(frontendDir, 'index.html.lars-backup')
         const indexHtmlPath = path.join(frontendDir, 'index.html')
+        const monitorStartMarker = '<!-- LARS_PERMISSION_MONITOR_START -->'
+        const monitorEndMarker = '<!-- LARS_PERMISSION_MONITOR_END -->'
+
         if (fs.existsSync(indexHtmlBackup)) {
           fs.copyFileSync(indexHtmlBackup, indexHtmlPath)
           fs.unlinkSync(indexHtmlBackup)
           console.log(chalk.green('✅ Restored original index.html'))
+        } else if (fs.existsSync(indexHtmlPath)) {
+          const currentHtml = fs.readFileSync(indexHtmlPath, 'utf-8')
+          if (currentHtml.includes(monitorStartMarker) && currentHtml.includes(monitorEndMarker)) {
+            const cleanedHtml = currentHtml.replace(
+              new RegExp(`${monitorStartMarker}[\\s\\S]*?${monitorEndMarker}`, 'g'),
+              ''
+            )
+            fs.writeFileSync(indexHtmlPath, cleanedHtml)
+            console.log(chalk.green('✅ Removed permission monitor injection from index.html'))
+          }
         }
       } catch (err) {
         console.error(chalk.red('Error cleaning up permission monitor:'), err)
@@ -1716,6 +1729,37 @@ async function startFrontend(
     return null
   }
 
+  // Always sanitize prior monitor injection state so frontend repos never need manual cleanup.
+  const indexHtmlPath = path.join(frontendDir, 'index.html')
+  const indexHtmlBackup = `${indexHtmlPath}.lars-backup`
+  const monitorStartMarker = '<!-- LARS_PERMISSION_MONITOR_START -->'
+  const monitorEndMarker = '<!-- LARS_PERMISSION_MONITOR_END -->'
+  const monitorRegex = new RegExp(
+    `${monitorStartMarker}[\\s\\S]*?${monitorEndMarker}`,
+    'g'
+  )
+
+  if (fs.existsSync(indexHtmlPath)) {
+    // Recover from interrupted sessions that left a backup file around.
+    if (fs.existsSync(indexHtmlBackup)) {
+      const originalHtml = fs.readFileSync(indexHtmlBackup, 'utf-8')
+      fs.writeFileSync(indexHtmlPath, originalHtml)
+      fs.unlinkSync(indexHtmlBackup)
+      console.log(
+        chalk.green(
+          '✅ Restored index.html from previous permission monitor session'
+        )
+      )
+    } else {
+      const currentHtml = fs.readFileSync(indexHtmlPath, 'utf-8')
+      const cleanedHtml = currentHtml.replace(monitorRegex, '')
+      if (cleanedHtml !== currentHtml) {
+        fs.writeFileSync(indexHtmlPath, cleanedHtml)
+        console.log(chalk.green('✅ Removed stale permission monitor injection'))
+      }
+    }
+  }
+
   // Start permission monitor if enabled
   if (enablePermissionMonitor) {
     const { startCollectorServer, getInjectionScript } = await import('./manifest-monitor/injector.js')
@@ -1729,24 +1773,24 @@ async function startFrontend(
     })
 
     // Inject the script into index.html
-    const indexHtmlPath = path.join(frontendDir, 'index.html')
     if (fs.existsSync(indexHtmlPath)) {
-      const originalHtml = fs.readFileSync(indexHtmlPath, 'utf-8')
+      const currentHtml = fs.readFileSync(indexHtmlPath, 'utf-8')
       const injectionScript = getInjectionScript(3399)
-      const marker = '<!-- LARS_MANIFEST_MONITOR -->'
+      const cleanHtml = currentHtml.replace(monitorRegex, '')
 
-      // Only inject if not already present
-      if (!originalHtml.includes(marker)) {
-        const injectedHtml = originalHtml.replace(
+      // Backup the clean original before injecting.
+      fs.writeFileSync(indexHtmlBackup, cleanHtml)
+
+      const injectedBlock = `${monitorStartMarker}${injectionScript}${monitorEndMarker}`
+      const injectedHtml = cleanHtml.includes('</head>')
+        ? cleanHtml.replace(
           '</head>',
-          `${marker}${injectionScript}${marker}</head>`
+          `${injectedBlock}</head>`
         )
-        fs.writeFileSync(indexHtmlPath, injectedHtml)
-        console.log(chalk.green('✅ Permission monitor script injected into index.html'))
+        : `${injectedBlock}${cleanHtml}`
 
-        // Store original for cleanup
-        fs.writeFileSync(indexHtmlPath + '.lars-backup', originalHtml)
-      }
+      fs.writeFileSync(indexHtmlPath, injectedHtml)
+      console.log(chalk.green('✅ Permission monitor overlay injected into index.html'))
     }
   }
 

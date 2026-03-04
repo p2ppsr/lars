@@ -207,7 +207,9 @@ Metanet apps require a `manifest.json` file that declares the permissions they n
 2. **Start LARS normally:**
    Select "Start Local Environment" or run `npx lars start`
 
-3. **Use your app** - click through all features that interact with the wallet. You'll see permissions being collected in the console:
+3. **Use your app** - click through all features that interact with the wallet.
+   A slide-out **Permission Monitor** appears in the bottom-right of your app so you can inspect and manage permissions live.
+   You'll also see collection logs in the terminal:
    ```
    🔍 Permission Monitor Active
       Collector server on http://localhost:3399
@@ -219,15 +221,24 @@ Metanet apps require a `manifest.json` file that declares the permissions they n
    ✓ Basket: "contacts"
    ```
 
-4. **Stop LARS** (Ctrl+C) - the manifest.json is automatically saved and the original index.html is restored.
+4. **Manage permissions in the overlay**:
+   - Review deduped protocol, basket, and certificate permissions.
+   - Toggle **PACT grouped permissions** (`counterparty: ""`) on/off.
+   - Remove permissions you do not want written into `manifest.json`.
+
+5. **Stop LARS** (Ctrl+C) - the `manifest.json` is saved and the original `index.html` is restored.
 
 ### How It Works
 
 When permission monitor is enabled, LARS:
 1. Injects a small script into your frontend's `index.html` that intercepts `fetch` calls to `localhost:3321`
-2. Runs a collector server that receives permission data from the browser
-3. Auto-saves permissions to `manifest.json` as they're detected
-4. Restores the original `index.html` when LARS stops
+2. Runs a collector server that receives permission data from the browser and serves monitor state endpoints
+3. Renders a bottom-right slide-out panel for real-time permission visibility and control
+4. Auto-saves permissions to `manifest.json` as they're detected or edited
+5. Supports PACT grouped permissions using `counterparty: ""` and shows grouped counterparties clearly
+6. Restores the original `index.html` when LARS stops
+
+LARS owns the full monitor lifecycle for you. No permanent frontend source changes are required in your app repo; LARS injects at runtime and restores automatically.
 
 ### Example Output
 

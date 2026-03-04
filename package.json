@@ -9,6 +9,7 @@
     },
     "scripts": {
         "build": "tsc -b",
+        "prepare": "npm run build",
         "lint": "ts-standard --fix src/**/*.ts*"
     },
     "keywords": [
