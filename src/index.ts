@@ -300,10 +300,10 @@ async function fundWallet(
     console.log(chalk.blue(`💰 Using local wallet version: ${version}`))
   } catch (err) {
     console.error(
-      chalk.red('❌ MetaNet Client is not installed or not running.')
+      chalk.red('❌ BSV Desktop is not installed or not running.')
     )
     console.log(
-      chalk.blue('👉 Download MetaNet Client: https://projectbabbage.com/')
+      chalk.blue('👉 Download BSV Desktop: https://github.com/bsv-blockchain/bsv-desktop/releases')
     )
     process.exit(1)
   }
@@ -311,7 +311,7 @@ async function fundWallet(
   if (network !== localNet) {
     console.warn(
       chalk.red(
-        `The currently-running MetaNet Client is on ${localNet} but LARS is configured for ${network}. Funding from local wallet is impossible.`
+        `The currently-running BSV Desktop is on ${localNet} but LARS is configured for ${network}. Funding from local wallet is impossible.`
       )
     )
     return
@@ -1259,7 +1259,7 @@ async function startLARS(
           name: 'action',
           message: "Your server's balance is low. What would you like to do?",
           choices: [
-            '💰 Fund server automatically (using local MetaNet Client)',
+            '💰 Fund server automatically (using local BSV Desktop)',
             '📝 Print manual funding instructions',
             '🚀 Continue without funding'
           ]
