@@ -32,7 +32,7 @@ Before using LARS, ensure you have:
 - **Node.js**: Version 20 or higher recommended.
 - **Docker**: With the Docker Compose plugin (Docker Desktop or Docker Engine + Compose Plugin).
 - **ngrok**: Installed and authenticated with your auth token.
-- **MetaNet Client**: For funding local Ninja keys if needed ([Download MetaNet Client](https://projectbabbage.com/)).
+- **BSV Desktop**: For funding local Ninja keys if needed ([Download BSV Desktop](https://github.com/bsv-blockchain/bsv-desktop/releases)).
 - **Git**: For version control (optional but recommended).
 
 You should also have a valid `deployment-info.json` at your project's root directory, describing your topic managers, lookup services, frontend, contracts, and LARS configuration.
@@ -111,7 +111,7 @@ If no keys are found, LARS will prompt you to set them. You can hoist newly set 
 
 From the main menu, or by running `lars start`, LARS will:
 
-- Check system dependencies (Docker, Compose, ngrok, MetaNet Client).
+- Check system dependencies (Docker, Compose, ngrok, BSV Desktop).
 - Start an ngrok tunnel to expose your local OverlayExpress instance.
 - Generate Docker Compose files and an environment tailored to your `deployment-info.json`.
 - If `run` includes `backend`, launch Docker containers for OverlayExpress, MySQL, and MongoDB.
@@ -132,7 +132,7 @@ Go to "Edit LARS Deployment Info" and select "Change network." LARS updates `dep
 
 ### 6. Funding Your Server Key (Optional)
 
-If your server key’s Ninja wallet balance is low, LARS offers automatic funding via MetaNet Client or instructions for manual funding. Keep at least 10,000 satoshis for stable local operation.
+If your server key’s Ninja wallet balance is low, LARS offers automatic funding via BSV Desktop or instructions for manual funding. Keep at least 10,000 satoshis for stable local operation.
 
 ### 7. Advanced Overlay Configuration & Admin Tools
 
