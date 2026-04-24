@@ -7,7 +7,7 @@ LARS is a command-line interface and development tool that simplifies running an
 LARS enables you to:
 
 - **Quickly configure a local development environment** for BSV applications using your `deployment-info.json` file.
-- **Interactively manage keys and settings** such as server private keys and TAAL (ARC) API keys, distinct per network (mainnet/testnet).
+- **Interactively manage keys and settings** such as server private keys and ARC API keys, distinct per network (mainnet/testnet).
 - **Seamlessly run OverlayExpress services** with automatic Docker Compose setup, MySQL, and MongoDB.
 - **Run both backend and frontend services** based on your configuration. LARS will automatically start a local frontend (e.g., React or static HTML) if specified, and ensure frontend dependencies are installed if necessary.
 - **Hot-reload contracts and code** as you develop, with automatic recompilation of sCrypt contracts when they change.
@@ -18,7 +18,7 @@ LARS is designed to make local development as frictionless as possible, guiding 
 ## Key Features
 
 - **Interactive Menus**: Running `lars` with no arguments launches interactive menus for configuring global keys, project configs, deployment info, or starting your local environment.
-- **Separation of Keys by Network**: Maintain distinct keys (server private keys, TAAL API keys) for mainnet and testnet, both globally and at the project level.
+- **Separation of Keys by Network**: Maintain distinct keys (server private keys, ARC API keys) for mainnet and testnet, both globally and at the project level.
 - **Automatic Environment Setup**: LARS creates a local Docker-based environment for your backend, including `overlay-express`, MySQL, and MongoDB.
 - **Frontend Integration**: If configured, LARS can also run your frontend (e.g., React). It automatically installs missing dependencies and starts the frontend. If you're running both backend and frontend, LARS waits until the backend is ready before starting the frontend.
 - **ngrok Integration**: Securely expose your local environment to the internet for testing or external integration.
@@ -32,7 +32,7 @@ Before using LARS, ensure you have:
 - **Node.js**: Version 20 or higher recommended.
 - **Docker**: With the Docker Compose plugin (Docker Desktop or Docker Engine + Compose Plugin).
 - **ngrok**: Installed and authenticated with your auth token.
-- **BSV Desktop**: For funding local Ninja keys if needed ([Download BSV Desktop](https://github.com/bsv-blockchain/bsv-desktop/releases)).
+- **BSV Desktop**: For funding local server keys if needed ([Download BSV Desktop](https://github.com/bsv-blockchain/bsv-desktop/releases)).
 - **Git**: For version control (optional but recommended).
 
 You should also have a valid `deployment-info.json` at your project's root directory, describing your topic managers, lookup services, frontend, contracts, and LARS configuration.
@@ -97,7 +97,7 @@ npx lars
 
 (If installed globally, just use `lars`.)
 
-You’ll see options to edit global keys, project configs, deployment info, or start the environment. If you have no LARS config, it will guide you to create one. The menus help you set or generate server keys, configure TAAL ARC API keys (if desired), choose your network, and select which services to run.
+You’ll see options to edit global keys, project configs, deployment info, or start the environment. If you have no LARS config, it will guide you to create one. The menus help you set or generate server keys, configure ARC API keys (if desired), choose your network, and select which services to run.
 
 ### 3. Configure Keys and Settings
 
@@ -192,7 +192,7 @@ A standard BSV project might look like:
 
 - **Port Conflicts**: LARS uses ports `8080` (app), `3306` (MySQL), and `27017` (MongoDB). Ensure these aren’t in use.
 - **Network Keys**: If you switch networks, remember that keys are distinct for mainnet and testnet. LARS will prompt if something’s missing.
-- **TAAL ARC Key**: If you set a TAAL API key for ARC, get it from [taal.com](https://taal.com/). Keep in mind it may differ between mainnet and testnet if required.
+- **ARC API Key**: If your broadcaster requires an ARC API key, store separate values for mainnet and testnet when needed.
 - **Frontend Setup**: If you selected `frontend` and your frontend is React-based, LARS will automatically run `npm install` if `node_modules` is missing. For static HTML, it uses `serve` to host your files.
 - **No `deployment-info.json`**: LARS can help you create a basic one if not present.
 - **Using LARS and CARS**: LARS is for local dev. CARS handles cloud deployments. They use a shared `deployment-info.json` structure, making transitions easier.
