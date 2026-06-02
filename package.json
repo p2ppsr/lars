@@ -4,6 +4,10 @@
     "description": "Local Automated Runtime System for BSV application development",
     "main": "dist/index.js",
     "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/p2ppsr/lars.git"
+    },
     "files": [
         "dist/index.js",
         "README.md",
