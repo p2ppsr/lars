@@ -1,6 +1,6 @@
 {
     "name": "@p2ppsr/lars",
-    "version": "1.5.10",
+    "version": "1.5.11",
     "description": "Local Automated Runtime System for BSV application development",
     "main": "dist/index.js",
     "type": "module",
