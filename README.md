@@ -42,7 +42,7 @@ You should also have a valid `deployment-info.json` at your project's root direc
 Install LARS as a development dependency in your BSV project:
 
 ```bash
-npm install --save-dev @bsv/lars
+npm install --save-dev @p2ppsr/lars
 ```
 
 This installs the `lars` command locally. You can also install it globally if you prefer, but local installation is often best for reproducible environments.
