@@ -10,7 +10,6 @@ import { spawn, execSync, ChildProcess } from 'child_process'
 import chokidar from 'chokidar'
 import yaml from 'yaml'
 import crypto from 'crypto'
-import ngrok from 'ngrok'
 import axios from 'axios'
 import {
   InternalizeActionArgs,
@@ -1137,6 +1136,92 @@ async function ensureFrontendDependencies (info: CARSConfigInfo) {
   }
 }
 
+async function startNgrokTunnel (
+  addr: number
+): Promise<{ url: string, process: ChildProcess }> {
+  const ngrokProcess = spawn(
+    'ngrok',
+    ['http', String(addr), '--log=stdout'],
+    {
+      stdio: ['ignore', 'pipe', 'pipe']
+    }
+  )
+
+  const urlPattern = /https:\/\/[^\s"']+/i
+  let stdoutBuffer = ''
+  let stderrBuffer = ''
+
+  return await new Promise((resolve, reject) => {
+    let settled = false
+    let pollTimer: NodeJS.Timeout | undefined
+    let timeoutTimer: NodeJS.Timeout | undefined
+
+    const finish = (url?: string, error?: Error) => {
+      if (settled) return
+      settled = true
+      if (pollTimer) clearInterval(pollTimer)
+      if (timeoutTimer) clearTimeout(timeoutTimer)
+      if (error) {
+        ngrokProcess.kill('SIGTERM')
+        reject(error)
+        return
+      }
+      if (!url) {
+        ngrokProcess.kill('SIGTERM')
+        reject(new Error('ngrok did not return a public URL'))
+        return
+      }
+      resolve({ url, process: ngrokProcess })
+    }
+
+    const inspectText = (text: string) => {
+      const match = text.match(urlPattern)
+      if (match) finish(match[0])
+    }
+
+    ngrokProcess.stdout?.on('data', (chunk: Buffer) => {
+      stdoutBuffer += chunk.toString()
+      inspectText(stdoutBuffer)
+    })
+
+    ngrokProcess.stderr?.on('data', (chunk: Buffer) => {
+      stderrBuffer += chunk.toString()
+      inspectText(stderrBuffer)
+    })
+
+    ngrokProcess.once('error', error => finish(undefined, error))
+    ngrokProcess.once('exit', code => {
+      if (!settled) {
+        finish(
+          undefined,
+          new Error(`ngrok exited before a tunnel was ready (code ${code ?? 'unknown'})`)
+        )
+      }
+    })
+
+    pollTimer = setInterval(() => {
+      axios
+        .get('http://127.0.0.1:4040/api/tunnels')
+        .then(response => {
+          const tunnels = response.data?.tunnels ?? []
+          const tunnel = tunnels.find((entry: any) =>
+            typeof entry.public_url === 'string' &&
+            entry.public_url.startsWith('https://')
+          )
+          if (tunnel) finish(tunnel.public_url)
+        })
+        .catch(() => {})
+    }, 500)
+
+    timeoutTimer = setTimeout(() => {
+      finish(
+        undefined,
+        new Error('Timed out waiting for ngrok tunnel URL from http://127.0.0.1:4040/api/tunnels')
+      )
+    }, 20000)
+  })
+}
+
 /// //////////////////////////////////////////////////////////////////////////////////
 // Start or reset LARS
 /// //////////////////////////////////////////////////////////////////////////////////
@@ -1227,6 +1312,7 @@ async function startLARS (
 
   // If withNgrok is requested, check ngrok
   let hostingUrl = 'localhost:8080'
+  let ngrokProcess: ChildProcess | null = null
   if (withNgrok) {
     try {
       execSync('ngrok version', { stdio: 'ignore' })
@@ -1311,7 +1397,9 @@ async function startLARS (
   // If user specified withNgrok, attempt to connect
   if (withNgrok) {
     console.log(chalk.blue('🌐 Starting ngrok...'))
-    const ngrokUrl = await ngrok.connect({ addr: 8080 })
+    const ngrokTunnel = await startNgrokTunnel(8080)
+    ngrokProcess = ngrokTunnel.process
+    const ngrokUrl = ngrokTunnel.url
     console.log(chalk.green(`🚀 ngrok tunnel established at ${ngrokUrl}`))
     hostingUrl = new URL(ngrokUrl).host
   }
@@ -1371,7 +1459,18 @@ async function startLARS (
       }
     }
 
-    // 3) If the backend was running, bring Docker Compose down
+    // 3) Kill the ngrok process if it was started by this run
+    if (ngrokProcess) {
+      console.log(chalk.blue('Stopping ngrok tunnel...'))
+      try {
+        ngrokProcess.kill('SIGTERM')
+        ngrokProcess = null
+      } catch (err) {
+        console.error(chalk.red('Error killing ngrok process:'), err)
+      }
+    }
+
+    // 4) If the backend was running, bring Docker Compose down
     if (runBackend) {
       console.log(chalk.blue('Stopping Docker Compose services...'))
       try {
@@ -1929,7 +2028,7 @@ function generatePackageJson (backendDependencies: Record<string, string>) {
       ...backendDependencies,
       '@bsv/overlay-express': '^2.2.0',
       mysql2: '^3.11.5',
-      tsx: '^4.19.2'
+      tsx: '^4.22.4'
     },
     devDependencies: {
       '@types/node': '^22.10.1'
