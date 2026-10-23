@@ -2038,7 +2038,7 @@ function generatePackageJson (backendDependencies: Record<string, string>) {
 }
 
 function generateDockerfile (enableContracts: boolean) {
-  let file = `FROM node:22-alpine
+  let file = `FROM node:22.23.4-alpine
 WORKDIR /app
 COPY ./local-data/overlay-dev-container/package.json .
 RUN npm i

@@ -204,3 +204,15 @@ Feedback and contributions are welcome! Please open issues or PRs on the LARS re
 ## License
 
 [Open BSV License](./LICENSE.txt)
+
+
+## October2026 Node security tooling
+
+CI execution uses exact patched Node releases. The supported major matrix,
+where present, uses22.23.4,24.22.1 and26.12.1; EOL20 is removed from execution.
+Application dependency versions and public library compatibility contracts are
+unchanged.
+Release1.5.13 pins generated local backend containers to Node22.23.4 Alpine.
+Hosted CI verifies the native Linux base runtime in addition to the retained
+TypeScript builds. Existing generated projects must separately update/rebuild
+their Dockerfile; installing a new CLI alone does not patch running containers.

@@ -17,13 +17,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20, 22, 24]
+        node-version: ['22.23.4', '24.22.1', '26.12.1']
     steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-node@v6
+    - uses: actions/checkout@v7
+    - uses: actions/setup-node@v7
       with:
         node-version: ${{ matrix.node-version }}
         registry-url: 'https://registry.npmjs.org'
+    - name: Verify generated backend base runtime
+      if: matrix.node-version == '22.23.4'
+      run: docker run --rm node:22.23.4-alpine node -e "const a=require('node:assert/strict'),z=require('node:zlib');a.equal(process.version,'v22.23.4');a.equal(z.brotliDecompressSync(z.brotliCompressSync(Buffer.from('security'))).toString(),'security');require('node:crypto').randomBytes(16);console.log(process.version,process.platform,process.arch)"
     - run: npm ci
     - run: npm run build
     - run: npm run lint:ci --if-present
@@ -43,10 +46,10 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.event_name == 'push' && github.ref == 'refs/heads/master') || github.event_name == 'workflow_dispatch'
     steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-node@v6
+    - uses: actions/checkout@v7
+    - uses: actions/setup-node@v7
       with:
-        node-version: '24'
+        node-version: '24.22.1'
         registry-url: 'https://registry.npmjs.org'
     - run: npm ci
     - run: npm run build
